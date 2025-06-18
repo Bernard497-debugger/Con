@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Announcements</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    .announcement { background: white; padding: 15px; margin: 10px 0; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    img { max-width: 100%; border-radius: 5px; }
+    input, textarea, button { display: block; margin: 10px 0; padding: 10px; width: 100%; }
+    button { background: green; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2>📢 Post New Announcement</h2>
+  <input type="text" id="title" placeholder="Announcement Title">
+  <textarea id="content" placeholder="Announcement Content"></textarea>
+  <input type="text" id="image_url" placeholder="Image URL (optional)">
+  <button onclick="postAnnouncement()">Post Announcement</button>
+
+  <h2>📃 All Announcements</h2>
+  <div id="announcements"></div>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://zkcefjgsthcwjwklihme.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprY2VmamdzdGhjd2p3a2xpaG1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNjc2NDEsImV4cCI6MjA2NTg0MzY0MX0.44Q2lNeIMvnY0kZMp30EuKuKqzHqNwb6EWkJR4Gz2Ro'
+    );
+
+    async function loadAnnouncements() {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('announcements');
+      container.innerHTML = '';
+
+      if (error) {
+        container.innerHTML = '<p>Error loading announcements</p>';
+        return;
+      }
+
+      data.forEach(item => {
+        container.innerHTML += `
+          <div class="announcement">
+            <h3>${item.title}</h3>
+            <p>${item.content}</p>
+            ${item.image_url ? `<img src="${item.image_url}" alt="Image">` : ''}
+            <small>Posted on: ${new Date(item.created_at).toLocaleString()}</small>
+          </div>
+        `;
+      });
+    }
+
+    async function postAnnouncement() {
+      const title = document.getElementById('title').value;
+      const content = document.getElementById('content').value;
+      const image_url = document.getElementById('image_url').value;
+
+      const { error } = await supabase
+        .from('announcements')
+        .insert([{ title, content, image_url }]);
+
+      if (error) {
+        alert('Failed to post announcement!');
+      } else {
+        alert('Posted successfully!');
+        loadAnnouncements();
+        document.getElementById('title').value = '';
+        document.getElementById('content').value = '';
+        document.getElementById('image_url').value = '';
+      }
+    }
+
+    loadAnnouncements();
+  </script>
+</body>
+</html>
